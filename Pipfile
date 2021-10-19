@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+"pytest" = "*"
+"black" = "*"
+coverage = "*"
+boto3 = "*"
+boto3-stubs = {extras = ["dynamo"], version = "*"}
+twine = "*"
+
+[requires]
+python_version = "3.9"
+
+[pipenv]
+allow_prereleases = true
+
+[packages]
+requests = "*"
