@@ -21,15 +21,15 @@ clean:
 
 coverage: .pipenv
 	pipenv run coverage run -m pytest -v
-	coverage html
+	pipenv run coverage html
 
 test: .pipenv
 	pipenv run pytest -xv
 
 lint: .pipenv
 	pipenv run black ddb_local/ test/
-	mypy -m ddb_local
-	mypy test/**.py
+	pipenv run mypy -m ddb_local
+	pipenv run mypy test/**.py
 
 ensure-java-exists:
 	which java > /dev/null || echo "Can't find java in PATH"

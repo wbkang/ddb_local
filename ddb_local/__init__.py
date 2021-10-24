@@ -172,17 +172,23 @@ class LocalDynamoDB(object):
                 self.ddb_process.kill()
                 self.ddb_process = None
 
-    def __enter__(self):
+    def start(self):
         self._ensure_port_free()
         self._ensure_java_exists()
         self._ensure_installed()
         self._start_ddb_local()
         self._ensure_reachable()
         logger.debug(f"LocalDynamoDB starting with {vars(self)}")
+
+    def stop(self):
+        self._shutdown_ddb_local()
+
+    def __enter__(self):
+        self.start()
         return self
 
     def __exit__(self, type, value, traceback):
-        self._shutdown_ddb_local()
+        self.stop()
 
 
 def create_new_inmemory_ddb() -> LocalDynamoDB:
