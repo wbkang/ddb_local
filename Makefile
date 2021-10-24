@@ -28,6 +28,8 @@ test: .pipenv
 
 lint: .pipenv
 	pipenv run black ddb_local/ test/
+	mypy -m ddb_local
+	mypy test/**.py
 
 ensure-java-exists:
 	which java > /dev/null || echo "Can't find java in PATH"

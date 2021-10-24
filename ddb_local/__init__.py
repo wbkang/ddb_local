@@ -62,8 +62,11 @@ class LocalDynamoDB(object):
         self.java_bin: Optional[str] = None
         self.ddb_process: Optional[subprocess.Popen] = None
         self.endpoint: str = f"http://localhost:{port}"
-        self.db_path: Optional[str] = None
         self.shared_db: bool = shared_db
+        self.db_path: Optional[str] = None
+        if db_path:
+            self.db_path = os.path.abspath(db_path)
+            os.makedirs(self.db_path, exist_ok=True)
         if in_memory and db_path is not None:
             raise Exception("Can't be both in_memory and on-disk")
 
@@ -143,6 +146,7 @@ class LocalDynamoDB(object):
         if self.db_path is not None:
             args.append("-dbPath")
             args.append(self.db_path)
+
         if self.shared_db:
             args.append("-sharedDb")
         args.extend(self.extra_args)

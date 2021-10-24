@@ -4,6 +4,12 @@ import os
 import shutil
 
 @pytest.fixture
+def clean_dbpath_dir():
+    temp = tempfile.mkdtemp()
+    yield temp
+    shutil.rmtree(temp)
+
+@pytest.fixture
 def clean_dir():
     temp = os.path.join(tempfile.mkdtemp(), "ddb-local")
     yield temp

@@ -2,9 +2,10 @@ from ddb_local import LocalDynamoDB, create_new_inmemory_ddb
 import requests
 import pytest
 import boto3
+from mypy_boto3_dynamodb import DynamoDBClient, DynamoDBServiceResource
 
 
-def create_test_table(dynamodb_resource):
+def create_test_table(dynamodb_resource: DynamoDBServiceResource):
     table = dynamodb_resource.create_table(
         TableName="TestTable",
         KeySchema=[
@@ -20,7 +21,15 @@ def create_test_table(dynamodb_resource):
     return table
 
 
-def does_test_table_exists(ddb_client):
+def create_ddb_client(local_ddb: LocalDynamoDB) -> DynamoDBClient:
+    return boto3.client("dynamodb", endpoint_url=local_ddb.endpoint)
+
+
+def create_ddb_resource(local_ddb: LocalDynamoDB) -> DynamoDBServiceResource:
+    return boto3.resource("dynamodb", endpoint_url=local_ddb.endpoint)
+
+
+def does_test_table_exists(ddb_client: DynamoDBClient):
     try:
         ddb_client.describe_table(TableName="TestTable")
         return True
@@ -43,10 +52,6 @@ def test_value_persisted_over_multiple_invocations(default_test_dir):
     with LocalDynamoDB(unpack_dir=default_test_dir) as ddb:
         ddb_resource = boto3.resource("dynamodb", endpoint_url=ddb.endpoint)
         create_test_table(ddb_resource)
-    import time
-
-    # I don't think DynamoDBLocal uses reuseaddr, so we have to add an artificial delay
-    time.sleep(1)
     with LocalDynamoDB(unpack_dir=default_test_dir) as ddb:
         ddb_client = boto3.client("dynamodb", endpoint_url=ddb.endpoint)
         assert does_test_table_exists(ddb_client)
@@ -63,6 +68,19 @@ def test_port_check(default_test_dir):
 def test_dont_accept_both_in_memory_and_db_path(default_test_dir):
     with pytest.raises(Exception):
         LocalDynamoDB(in_memory=True, db_path=".")
+
+
+def test_exception_if_db_path_is_a_file():
+    with pytest.raises(Exception):
+        LocalDynamoDB(db_path=".gitignore")
+
+
+def test_when_using_dbpath_data_is_persisted(clean_dbpath_dir):
+    with pytest.raises(Exception):
+        with LocalDynamoDB(db_path=clean_dbpath_dir) as ddb:
+            create_test_table(ddb)
+        with LocalDynamoDB(db_path=clean_dbpath_dir) as ddb:
+            assert does_test_table_exists(create_ddb_client(ddb))
 
 
 def test_with_java_home(java_home, default_test_dir):
