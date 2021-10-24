@@ -60,6 +60,14 @@ def test_with_local_ddb(local_ddb):
     # ...
 ```
 
+Use `extra_args` escape hatch to specify custom arguments to the underlying Java process:
+
+```python
+from ddb_local import LocalDynamoDB
+
+db = LocalDynamoDB(extra_args=["-sharedDb"])
+```
+
 Troubleshooting with debug flag:
 
 ```python
@@ -70,6 +78,15 @@ db.start()
 # expect stderr/out from DynamoDbLocal
 db.stop()
 ```
+
+Use a pre-installed binary that is already unpacked:
+
+```python
+from ddb_local import LocalDynamoDB
+
+db = LocalDynamoDB(unpack_dir="/opt/dynamodb_local")
+```
+
 
 ## Development
 
