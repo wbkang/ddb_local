@@ -33,7 +33,7 @@ with LocalDynamoDB() as local_ddb:
 
 ```
 
-Outside a context manager, you can also call `start()` and `stop()` manually.
+Outside a context manager, you can also call `start()` and `stop()` manually. In this case, it's your responsibility to make sure `stop()` is called.
 
 ```python
 from ddb_local import LocalDynamoDB
@@ -50,10 +50,14 @@ Example usage with [pytest](https://pytest.org/):
 import pytest
 from ddb_local import LocalDynamoDB
 
-@pytest
-def ddb():
+@pytest.fixture
+def local_ddb():
     with LocalDynamoDB():
         yield ddb
+
+def test_with_local_ddb(local_ddb):
+    ddb = boto3.client('dynamodb', endpoint_url=local_ddb.endpoint)
+    # ...
 ```
 
 Troubleshooting with debug flag:

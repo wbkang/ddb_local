@@ -109,5 +109,5 @@ def test_unusable_unpack_dir(existing_file):
 def test_start_and_stop():
     ddb = LocalDynamoDB(in_memory=True)
     ddb.start()
-    requests.get("http://localhost:8000")
+    requests.get(ddb.endpoint)
     ddb.stop()
