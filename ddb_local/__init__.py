@@ -7,6 +7,7 @@ import tarfile
 import subprocess
 import time
 import socket
+import shutil
 
 logger = logging.getLogger("ddb_local")
 
@@ -17,6 +18,15 @@ DEFAULT_UNPACK_DIR = os.path.join(tempfile.gettempdir(), "ddb_local")
 DEFAULT_CHUNK_SIZE = 256 * 1024
 DEFAULT_REACHABLE_TIMEOUT = 3
 DEFAULT_KILL_WAIT_TIME = 5
+
+
+def is_within_directory(directory, target):
+    abs_directory = os.path.abspath(directory)
+    abs_target = os.path.abspath(target)
+
+    prefix = os.path.commonprefix([abs_directory, abs_target])
+
+    return prefix == abs_directory
 
 
 class LocalDynamoDB(object):
@@ -83,8 +93,29 @@ class LocalDynamoDB(object):
             os.makedirs(self.unpack_dir, exist_ok=True)
             with requests.get(self.source_url, stream=True) as req:
                 req.raise_for_status()
-                with tarfile.open(fileobj=req.raw, mode="r:gz") as tf:
-                    tf.extractall(path=self.unpack_dir)
+
+                cur_cwd = os.getcwd()
+                # tarfile.extract works relative to the tar file.
+                os.chdir(self.unpack_dir)
+                success = False
+                try:
+                    with tarfile.open(fileobj=req.raw, mode="r:gz") as tf:
+                        while True:
+                            member = tf.next()
+                            if not member:
+                                break
+                            member_path = os.path.join(self.unpack_dir, member.name)
+                            if not is_within_directory(self.unpack_dir, member_path):
+                                raise Exception(
+                                    f"Attempted Path Traversal in Tar File. Path:{member_path}"
+                                )
+                            tf.extract(member)
+                    success = True
+                finally:
+                    # delete if the extraction failed.
+                    if not success:
+                        shutil.rmtree(self.unpack_dir, ignore_errors=True)
+                    os.chdir(cur_cwd)
 
     def _ensure_port_free(self):
         try:

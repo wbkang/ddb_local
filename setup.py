@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='ddb_local',
-    version='0.1.5',
+    version='0.1.6',
     packages=['ddb_local',],
     license='MIT',
     author="Woongbin Kang",
